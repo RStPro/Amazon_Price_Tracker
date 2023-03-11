@@ -6,10 +6,10 @@ from pathlib import Path
 import smtplib
 
 # evn path and variables
-dotenv_path = Path('.env')
+dotenv_path = Path('Info/.env')
 load_dotenv(dotenv_path=dotenv_path)
 
-SMTP_ADDRESS=os.getenv('SMTP_ADDRESS')
+SMTP_ADDRESS=os.getenv("SMTP_ADDRESS")
 SENDER=os.getenv("SENDER")
 PASSWORD=os.getenv("PASSWORD")
 
@@ -21,7 +21,7 @@ headers = {
     
 }
 
-URL="https://www.amazon.es/-/pt/dp/B0B1YJRL9X/ref=sr_1_1?crid=2KC9ENME9RCD3&keywords=garmin+enduro+2&qid=1678548009&s=electronics&sprefix=garmin+enduro+%2Celectronics%2C97&sr=1-1"
+URL="https://www.garmin.com/pt-PT/p/854515"
 
 response = requests.get(url=URL, headers=headers)
 
@@ -39,7 +39,7 @@ price_2 = article_price.split()[1]
 
 price = int(price_1+price_2)
 
-title = soup.find(name="span", id="productTitle").getText().split("Relógio")[0]
+title = soup.find(name="span", id="productTitle").getText().split("®")[0]
 
 # Define Price Targuet
 BUY_PRICE = 2000
@@ -48,11 +48,15 @@ BUY_PRICE = 2000
 if price < BUY_PRICE:
     message = f"{title} is now {price}"
 
-    with smtplib.SMTP(SMTP_ADDRESS, port=587) as connection:
+    # configure connection - this changes with the mail account
+    with smtplib.SMTP("smtp.gmail.com", port=587) as connection:
+        # to secure connection
         connection.starttls()
-        result = connection.login(SENDER, PASSWORD)
-        connection.sendmail(
-            SENDER,
-            SENDER,
-            f"Subject: Amazon Price Alert!\n{message}"
-            )
+        # login connection
+        result = connection.login(user=SENDER, password=PASSWORD)
+        # send email
+        connection.sendmail(from_addr=SENDER,
+                            to_addrs="rodolfo.m.santos@gmail.com",
+                            msg=f"Subject: Amazon Price Tracker: {title}\n\n{message}\n\n{URL}")
+        connection.close()
+        
